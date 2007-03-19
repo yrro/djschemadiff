@@ -86,6 +86,14 @@ def rmdb (db):
 	import shutil
 	shutil.rmtree (db)
 
+def pg_dump (user, dbname, host='', port=''):
+	p = os.popen ('pg_dump --no-owner --schema-only --no-privileges --host=%s -U %s --port=%s %s' % (host, user, port, dbname), 'r')
+	output = p.read ()
+	status = p.close ()
+	if status != None:
+		raise Exception ('... pg_dump failed (%i)' % status)
+	return output
+
 if __name__ == '__main__':
 	import traceback
 
@@ -134,11 +142,7 @@ if __name__ == '__main__':
 			# create database tables
 			syncdb (con)
 
-			p = os.popen ('pg_dump --no-owner --schema-only --no-privileges --host=%s -U theuser postgres' % (db), 'r')
-			sql_clean = p.readlines ()
-			status = p.close ()
-			if status != None:
-				raise Exception ('... pg_dump failed (%i)' % status)
+			sql_clean = pg_dump (user='theuser', dbname='postgres', host=db)
 
 		except Exception, e:
 			print '-' * 80
@@ -154,11 +158,7 @@ if __name__ == '__main__':
 	rmdb (db)
 
 	from django.conf import settings
-	p = os.popen ('pg_dump --no-owner --schema-only --no-privileges -U %(user)s %(db)s' % {'user': settings.DATABASE_USER, 'db': settings.DATABASE_NAME}, 'r')
-	sql_current = p.readlines ()
-	status = p.close ()
-	if status != None:
-		raise Exception ('... pg_dump failed (%i)' % status)
+	sql_current = pg_dump (user=settings.DATABASE_USER, dbname=settings.DATABASE_NAME, host=settings.DATABASE_HOST, port=settings.DATABASE_PORT)
 
 	import difflib
 	g = difflib.unified_diff (sql_current, sql_clean, fromfile='current-schema', tofile='new-schema')
