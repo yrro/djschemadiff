@@ -23,7 +23,6 @@ def spawn_postmaster (db):
 
 def syncdb (connection):
 	'''Code structure taken from django.core.management.syncdb'''
-	from django.db import models
 	import django.core.management
 	from django.core.management import _get_sql_model_create, _get_sql_for_pending_references, _get_many_to_many_sql_for_model, get_sql_indexes_for_model
 
@@ -83,6 +82,26 @@ def rmdb (db):
 
 if __name__ == '__main__':
 	import traceback
+
+	try:
+		settingsfile = sys.argv[1]
+		
+		import os.path
+		(settingspath, settingsmodule) = os.path.split (settingsfile)
+		settingsmodule = os.path.splitext (settingsmodule)[0]
+
+		sys.path.insert (0, settingspath)
+		os.environ['DJANGO_SETTINGS_MODULE'] = settingsmodule
+	except IndexError:
+		sys.stderr.write ('Usage: %s django_settings_file\n' % (sys.argv[0]))
+		sys.exit (1)
+
+	try:
+		from django.db import models
+	except EnvironmentError, e:
+		sys.stderr.write ('%s\n' % (e))
+		sys.exit (1)
+
 	db = initdb ()
 	cfg = open ('%s/postgresql.conf' % (db), 'a')
 	cfg.write ('listen_addresses = \'\'')
