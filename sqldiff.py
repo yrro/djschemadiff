@@ -104,7 +104,7 @@ if __name__ == '__main__':
 
 	db = initdb ()
 	cfg = open ('%s/postgresql.conf' % (db), 'a')
-	cfg.write ('listen_addresses = \'\'')
+	cfg.write ("listen_addresses = ''") # disable TCP, avoid port conflicts
 	cfg.close ()
 
 	try:
