@@ -101,7 +101,12 @@ class SqlSet (object):
 		return 'SET %s = %s' % (self.name, ','.join (self.value))
 
 class SqlComment (object):
-	pass
+	def __init__ (self, schema, comment):
+		self.schema = schema
+		self.comment = comment
+	
+	def __str__ (self):
+		return "COMMENT ON SCHEMA %s IS '%s'" % (self.schema, self.comment)
 
 # lexer rules
 #
@@ -197,7 +202,7 @@ def p_set_value_quoted (p):
 
 def p_comment_stmt (p):
 	'comment_stmt : COMMENT ON SCHEMA ID IS STRING'
-	p[0] = SqlComment ()
+	p[0] = SqlComment (p[4], p[6])
 
 def p_create_table_stmt (p):
 	'''create_table_stmt : CREATE TABLE ID '(' table_properties ')' '''
