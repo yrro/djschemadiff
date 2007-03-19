@@ -83,20 +83,21 @@ def rmdb (db):
 if __name__ == '__main__':
 	import traceback
 
+	# Parse command line arguments
 	try:
 		settingsfile = sys.argv[1]
 		
 		import os.path
 		(settingspath, settingsmodule) = os.path.split (settingsfile)
 		settingsmodule = os.path.splitext (settingsmodule)[0]
-
-		sys.path.insert (0, settingspath)
-		os.environ['DJANGO_SETTINGS_MODULE'] = settingsmodule
 	except IndexError:
 		sys.stderr.write ('Usage: %s django_settings_file\n' % (sys.argv[0]))
 		sys.exit (1)
 
+	# Init django database
 	try:
+		sys.path.insert (0, settingspath)
+		os.environ['DJANGO_SETTINGS_MODULE'] = settingsmodule
 		from django.db import models
 	except EnvironmentError, e:
 		sys.stderr.write ('%s\n' % (e))
