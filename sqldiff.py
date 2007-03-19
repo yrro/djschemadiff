@@ -14,6 +14,10 @@ def initdb ():
 	if status != 0:
 		rmdb (dir)
 		raise Exception ('initdb failed (%i)' % (status))
+	
+	cfg = open (os.path.join (dir, 'postgresql.conf'), 'a')
+	cfg.write ("listen_addresses = ''") # disable TCP, avoid port conflicts
+	cfg.close ()
 	return dir
 
 def spawn_postmaster (db):
@@ -104,9 +108,6 @@ if __name__ == '__main__':
 		sys.exit (1)
 
 	db = initdb ()
-	cfg = open ('%s/postgresql.conf' % (db), 'a')
-	cfg.write ("listen_addresses = ''") # disable TCP, avoid port conflicts
-	cfg.close ()
 
 	try:
 		pid = spawn_postmaster (db)
