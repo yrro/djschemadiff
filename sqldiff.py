@@ -103,6 +103,8 @@ if __name__ == '__main__':
 	# Init django database
 	try:
 		sys.path.insert (0, settingspath)
+		# without including the parent directory, the imports silently fail
+		sys.path.insert (0, settingspath + '/../')
 		os.environ['DJANGO_SETTINGS_MODULE'] = settingsmodule
 		from django.db import models
 	except EnvironmentError, e:
