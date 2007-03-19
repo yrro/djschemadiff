@@ -1,24 +1,13 @@
 #!/usr/bin/python
 
-# next phase: parse the SQL statements!
-#
-# the order of statements in a block is independent
-# drop the commas from the end
-
-import os
-import psycopg
-import tempfile
+import os, sys
 from sets import Set as set
-import shutil
-import signal
-import traceback
-
-from django.db import models
 
 postgres_bin = '/usr/lib/postgresql/8.1/bin'
 
 def initdb ():
 	'''Creates a PostgreSQL cluster and returns the directory it is in.'''
+	import tempfile
 	dir = tempfile.mkdtemp ()
 	initdb_path = os.path.join (postgres_bin, 'initdb')
 	status = os.spawnl (os.P_WAIT, initdb_path, initdb_path, '-U', 'theuser', '-D', dir)
@@ -34,11 +23,11 @@ def spawn_postmaster (db):
 
 def syncdb (connection):
 	'''Code structure taken from django.core.management.syncdb'''
+	from django.db import models
 	import django.core.management
-	django.core.management.disable_termcolors ()
-
 	from django.core.management import _get_sql_model_create, _get_sql_for_pending_references, _get_many_to_many_sql_for_model, get_sql_indexes_for_model
 
+	django.core.management.disable_termcolors ()
 	cursor = connection.cursor ()
 
 	seen_models = set ()
@@ -82,15 +71,18 @@ def syncdb (connection):
 def kill_postmaster (pid):
 	print '... sending postmaster the termination signal'
 	# XXX: how do we know that pid is our child?'''
+	import signal
 	os.kill (pid, signal.SIGTERM)
 	print '... waiting for process %i to terminate' % (pid)
 	os.waitpid (pid, 0)
 	print '... it is done, yuri!'
 
 def rmdb (db):
+	import shutil
 	shutil.rmtree (db)
 
 if __name__ == '__main__':
+	import traceback
 	db = initdb ()
 	cfg = open ('%s/postgresql.conf' % (db), 'a')
 	cfg.write ('listen_addresses = \'\'')
@@ -104,6 +96,7 @@ if __name__ == '__main__':
 			con = None
 			ex = None
 			for x in xrange (0, 5):
+				import psycopg
 				try: con = psycopg.connect ('host=%s dbname=postgres user=theuser' % (db))
 				except psycopg.OperationalError, e: 	ex = e
 				if con != None:
