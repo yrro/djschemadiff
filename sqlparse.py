@@ -341,7 +341,12 @@ from ply import lex, yacc
 lex.lex ()
 yacc.yacc ()
 
+def parse (sql):
+	'''Parses semicolon-delimeted statements in the input string. Returns a
+	list of Sql* objects.'''
+	return yacc.parse (sql)
+
 if __name__ == '__main__':
 	import sys
-	for x in yacc.parse (sys.stdin.read ()):
+	for x in parse (sys.stdin.read ()):
 		print x
