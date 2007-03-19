@@ -160,6 +160,21 @@ if __name__ == '__main__':
 	from django.conf import settings
 	sql_current = pg_dump (user=settings.DATABASE_USER, dbname=settings.DATABASE_NAME, host=settings.DATABASE_HOST, port=settings.DATABASE_PORT)
 
+	import sqlparse
+	sql_current = sqlparse.parse (sql_current)
+	sql_clean = sqlparse.parse (sql_clean)
+
+	def bytype (o1, o2):
+		r = cmp (type (o1), type (o2))
+		if r != 0:
+			return r
+		return cmp (o1, o2)
+	sql_current.sort (bytype)
+	sql_clean.sort (bytype)
+
 	import difflib
-	g = difflib.unified_diff (sql_current, sql_clean, fromfile='current-schema', tofile='new-schema')
-	print ''.join (g)
+	g = difflib.unified_diff ('\n'.join ([str (s) for s in sql_current]).split ('\n'),
+		'\n'.join ([str (s) for s in sql_clean]).split ('\n'),
+		fromfile='current-schema', tofile='new-schema',
+		n=10, lineterm='')
+	print '\n'.join (g)

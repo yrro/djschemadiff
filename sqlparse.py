@@ -17,6 +17,12 @@ class SqlIndex (object):
 		result += 'INDEX %s ON %s USING %s (%s)' % (self.name, self.table, self.method, self.expression)
 		return result
 
+	def __cmp__ (self, other):
+		r = cmp (self.name, other.name)
+		if r != 0:
+			return r
+		return cmp (self.table, other.table)
+
 class SqlForeignConstraint (object):
 	def __init__ (self, name, reftable, refcolumn, deferrable, initdeferred):
 		self.name = name
@@ -60,6 +66,9 @@ class SqlConstraint (object):
 	def __str__ (self):
 		return 'CONSTRAINT %s %s' % (self.name, self.constraint)
 
+	def __cmp__ (self, other):
+		return cmp (self.name, other.name)
+
 class SqlAlterTable (object):
 	def __init__ (self, name, only, constraint):
 		self.name = name
@@ -71,6 +80,12 @@ class SqlAlterTable (object):
 		if self.only: result += 'ONLY '
 		result += '%s ADD %s' % (self.name, self.constraint)
 		return result
+	
+	def __cmp__ (self, other):
+		r = cmp (self.name, other.name)
+		if r != 0:
+			return r
+		return cmp (self.constraint, other.constraint)
 
 class SqlTableField (object):
 	def __init__ (self, name, type, null):
@@ -90,7 +105,15 @@ class SqlCreateTable (object):
 		self.properties = properties
 	
 	def __str__ (self):
-		return 'CREATE TABLE %s (%s)' % (self.name, ', '.join ([str (p) for p in self.properties]))
+		# HACK: sorting table properties by their string
+		# representation is probably good enough
+		props = ['\t' + str (p) for p in self.properties]
+		props.sort ()
+
+		return 'CREATE TABLE %s (\n%s\n)' % (self.name, ',\n'.join (props))
+	
+	def __cmp__ (self, other):
+		return cmp (self.name, other.name)
 
 class SqlSet (object):
 	def __init__ (self, name, value):
@@ -100,6 +123,9 @@ class SqlSet (object):
 	def __str__ (self):
 		return 'SET %s = %s' % (self.name, ','.join (self.value))
 
+	def __cmp__ (self, other):
+		return cmp (self.name, other.name)
+
 class SqlComment (object):
 	def __init__ (self, schema, comment):
 		self.schema = schema
@@ -107,6 +133,9 @@ class SqlComment (object):
 	
 	def __str__ (self):
 		return "COMMENT ON SCHEMA %s IS '%s'" % (self.schema, self.comment)
+
+	def __cmp__ (self, other):
+		return self.schema, other.schema
 
 # lexer rules
 #
