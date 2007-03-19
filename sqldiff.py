@@ -25,6 +25,8 @@ def spawn_postmaster (db):
 	postmaster_path = os.path.join (postgres_bin, 'postmaster')
 	return os.spawnl (os.P_NOWAIT, postmaster_path, postmaster_path, '-k', db, '-D', db, '-F')
 
+# It would be great if we could call django's own syncdb routine with our
+# own database connection, but I can't work out how
 def syncdb (connection):
 	'''Code structure taken from django.core.management.syncdb'''
 	import django.core.management
@@ -127,7 +129,7 @@ if __name__ == '__main__':
 			if con == None:
 				raise ex
 
-			# do stuff
+			# create database tables
 			syncdb (con)
 
 			p = os.popen ('pg_dump --no-owner --schema-only --no-privileges --host=%s -U theuser postgres' % (db), 'r')
