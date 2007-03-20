@@ -55,15 +55,21 @@ if __name__ == '__main__':
 	import traceback
 
 	# Parse command line arguments
-	try:
-		settingsfile = sys.argv[1]
+	import optparse
+	op = optparse.OptionParser (usage = '%prog [options] settings_file')
+	op.add_option ('--mode', '-m',
+		dest='mode', choices=['udiff', 'vimdiff'], default='udiff',
+		help='udiff (default) or vimdiff')
 		
-		import os.path
-		(settingspath, settingsmodule) = os.path.split (settingsfile)
-		settingsmodule = os.path.splitext (settingsmodule)[0]
-	except IndexError:
-		sys.stderr.write ('Usage: %s django_settings_file\n' % (sys.argv[0]))
-		sys.exit (1)
+	(options, args) = op.parse_args()
+	if len (args) != 1:
+		op.error ('Specify the path to a single Django settings file')
+
+	settingsfile = args[0]
+
+	import os.path
+	(settingspath, settingsmodule) = os.path.split (settingsfile)
+	settingsmodule = os.path.splitext (settingsmodule)[0]
 
 	# Init django database
 	try:
@@ -127,9 +133,20 @@ if __name__ == '__main__':
 	sql_current.sort (bytype)
 	sql_clean.sort (bytype)
 
-	import difflib
-	g = difflib.unified_diff ('\n'.join ([str (s) for s in sql_current]).split ('\n'),
-		'\n'.join ([str (s) for s in sql_clean]).split ('\n'),
-		fromfile='current-schema', tofile='new-schema',
-		n=10, lineterm='')
-	print '\n'.join (g)
+	if options.mode == 'udiff':
+		import difflib
+		g = difflib.unified_diff ('\n'.join ([str (s) + ';' for s in sql_current]).split ('\n'),
+			'\n'.join ([str (s) + ';' for s in sql_clean]).split ('\n'),
+			fromfile='current-schema', tofile='new-schema',
+			n=10, lineterm='')
+		print '\n'.join (g)
+	
+	elif options.mode == 'vimdiff':
+		import tempfile
+		f1 = tempfile.NamedTemporaryFile ()
+		f2 = tempfile.NamedTemporaryFile ()
+		f1.write ('\n'.join ([str (s) + ';' for s in sql_current]))
+		f2.write ('\n'.join ([str (s) + ';' for s in sql_clean]))
+		f1.flush ()
+		f2.flush ()
+		os.spawnlp (os.P_WAIT, 'vimdiff', 'vimdiff', '-m', f1.name, f2.name)
