@@ -3,28 +3,6 @@
 import os, sys
 from sets import Set as set
 
-postgres_bin = '/usr/lib/postgresql/8.1/bin'
-
-def initdb ():
-	'''Creates a PostgreSQL cluster and returns the directory it is in.'''
-	import tempfile
-	dir = tempfile.mkdtemp ()
-	initdb_path = os.path.join (postgres_bin, 'initdb')
-	status = os.spawnl (os.P_WAIT, initdb_path, initdb_path, '-U', 'theuser', '-D', dir)
-	if status != 0:
-		rmdb (dir)
-		raise Exception ('initdb failed (%i)' % (status))
-	
-	cfg = open (os.path.join (dir, 'postgresql.conf'), 'a')
-	cfg.write ("listen_addresses = ''") # disable TCP, avoid port conflicts
-	cfg.close ()
-	return dir
-
-def spawn_postmaster (db):
-	'''Spawns a postmaster instance for the database in the background. Returns the pid of the process.'''
-	postmaster_path = os.path.join (postgres_bin, 'postmaster')
-	return os.spawnl (os.P_NOWAIT, postmaster_path, postmaster_path, '-k', db, '-D', db, '-F')
-
 # It would be great if we could call django's own syncdb routine with our
 # own database connection, but I can't work out how
 def syncdb (connection):
@@ -73,27 +51,6 @@ def syncdb (connection):
 	
 	connection.commit ()
 
-def kill_postmaster (pid):
-	print '... sending postmaster the termination signal'
-	# XXX: how do we know that pid is our child?'''
-	import signal
-	os.kill (pid, signal.SIGTERM)
-	print '... waiting for process %i to terminate' % (pid)
-	os.waitpid (pid, 0)
-	print '... it is done, yuri!'
-
-def rmdb (db):
-	import shutil
-	shutil.rmtree (db)
-
-def pg_dump (user, dbname, host='', port=''):
-	p = os.popen ('pg_dump --no-owner --schema-only --no-privileges --host=%s -U %s --port=%s %s' % (host, user, port, dbname), 'r')
-	output = p.read ()
-	status = p.close ()
-	if status != None:
-		raise Exception ('... pg_dump failed (%i)' % status)
-	return output
-
 if __name__ == '__main__':
 	import traceback
 
@@ -119,30 +76,20 @@ if __name__ == '__main__':
 		sys.stderr.write ('%s\n' % (e))
 		sys.exit (1)
 
-	db = initdb ()
+	import pgembed
+	db = pgembed.initdb ()
 
 	try:
-		pid = spawn_postmaster (db)
+		pid = pgembed.spawn_postmaster (db)
 
+		con = None
 		try:
-			# connect
-			con = None
-			ex = None
-			for x in xrange (0, 5):
-				import psycopg
-				try: con = psycopg.connect ('host=%s dbname=postgres user=theuser' % (db))
-				except psycopg.OperationalError, e: 	ex = e
-				if con != None:
-					break
-				import time
-				time.sleep (1)
-			if con == None:
-				raise ex
+			con = pgembed.connect (db)
 
 			# create database tables
 			syncdb (con)
 
-			sql_clean = pg_dump (user='theuser', dbname='postgres', host=db)
+			sql_clean = pgembed.pg_dump (host=db)
 
 		except Exception, e:
 			print '-' * 80
@@ -150,15 +97,22 @@ if __name__ == '__main__':
 
 		if con != None:
 			con.close ()
-		kill_postmaster (pid)
+
+		pgembed.kill_postmaster (pid)
 	except Exception, e:
 		print '-' * 80
 		traceback.print_exc ()
+		pgembed.rmdb (db)
+		sys.exit (1)
 	
-	rmdb (db)
+	pgembed.rmdb (db)
 
 	from django.conf import settings
-	sql_current = pg_dump (user=settings.DATABASE_USER, dbname=settings.DATABASE_NAME, host=settings.DATABASE_HOST, port=settings.DATABASE_PORT)
+	sql_current = pgembed.pg_dump (user=settings.DATABASE_USER,
+		dbname=settings.DATABASE_NAME,
+		host=settings.DATABASE_HOST,
+		port=settings.DATABASE_PORT,
+		password=settings.DATABASE_PASSWORD)
 
 	import sqlparse
 	sql_current = sqlparse.parse (sql_current)
