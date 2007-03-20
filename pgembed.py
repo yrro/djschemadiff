@@ -94,5 +94,5 @@ def pg_dump (host, user=_postgres_user, dbname='postgres', port='', password='')
 	output = p.read ()
 	status = p.close ()
 	if status != None:
-		raise Exception ('... pg_dump failed (%i)' % status)
+		raise Exception ('pg_dump failed (%i)' % status)
 	return output
