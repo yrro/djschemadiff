@@ -63,10 +63,8 @@ if __name__ == '__main__':
 	if len (args) != 1:
 		op.error ('Specify the path to a single Django settings file')
 
-	settingsfile = args[0]
-
 	import os.path
-	(settingspath, settingsmodule) = os.path.split (settingsfile)
+	(settingspath, settingsmodule) = os.path.split (args[0])
 	settingsmodule = os.path.splitext (settingsmodule)[0]
 
 	# Init django database
