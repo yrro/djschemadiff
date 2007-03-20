@@ -8,6 +8,7 @@ _postgres_user = 'pgembed'
 
 def initdb ():
 	'''Creates a PostgreSQL cluster and returns the directory it is in.'''
+	# TODO: use subprocess module, send output to stderr
 	import tempfile
 	dir = tempfile.mkdtemp ()
 	initdb_path = os.path.join (_postgres_bin, 'initdb')
@@ -87,7 +88,8 @@ def rmdb (db):
 
 def pg_dump (host, user=_postgres_user, dbname='postgres', port='', password=''):
 	'''Dumps the schema of a database'''
-	# TODO: specify password to pg_dump somehow
+	# TODO: specify password to pg_dump with PGPASSWORD
+	# environment var via subprocess module
 	p = os.popen ('pg_dump --no-owner --schema-only --no-privileges --host=%s --username=%s --port=%s %s' % (host, user, port, dbname), 'r')
 	output = p.read ()
 	status = p.close ()

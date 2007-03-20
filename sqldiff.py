@@ -4,9 +4,9 @@ import os, sys
 from sets import Set as set
 
 # It would be great if we could call django's own syncdb routine with our
-# own database connection, but I can't work out how
+# own database connection, but I can't work out how. So instead I copied
+# the structure of the django.core.management.syncdb function.
 def syncdb (connection):
-	'''Code structure taken from django.core.management.syncdb'''
 	import django.core.management
 	from django.core.management import _get_sql_model_create, _get_sql_for_pending_references, _get_many_to_many_sql_for_model, get_sql_indexes_for_model
 
@@ -119,6 +119,7 @@ if __name__ == '__main__':
 	sql_clean = sqlparse.parse (sql_clean)
 
 	def bytype (o1, o2):
+		'Sort objects by their type; then by their value.'
 		r = cmp (type (o1), type (o2))
 		if r != 0:
 			return r
