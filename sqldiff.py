@@ -52,8 +52,6 @@ def syncdb (connection):
 	connection.commit ()
 
 if __name__ == '__main__':
-	import traceback
-
 	# Parse command line arguments
 	import optparse
 	op = optparse.OptionParser (usage = '%prog [options] settings_file')
@@ -87,26 +85,16 @@ if __name__ == '__main__':
 
 	try:
 		pid = pgembed.spawn_postmaster (db)
+		con = pgembed.connect (db)
 
-		con = None
-		try:
-			con = pgembed.connect (db)
+		syncdb (con)
+		sql_clean = pgembed.pg_dump (host=db)
 
-			# create database tables
-			syncdb (con)
-
-			sql_clean = pgembed.pg_dump (host=db)
-
-		except Exception, e:
-			print '-' * 80
-			traceback.print_exc ()
-
-		if con != None:
-			con.close ()
-
+		con.close ()
 		pgembed.kill_postmaster (pid)
 	except Exception, e:
 		print '-' * 80
+		import traceback
 		traceback.print_exc ()
 		pgembed.rmdb (db)
 		sys.exit (1)
