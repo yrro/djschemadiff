@@ -1,0 +1,74 @@
+djschemadiff - show differences between Django database schemas
+Copyright 2007 Sam Morris <sam@robots.org.uk>
+
+Tired of manually updating your database schema after changing your model
+classes? So was I! I wrote this tool to automatically compare your database's
+current schema to the schema that would be produced if you started with a
+fresh, empty database and then ran syncdb.
+
+Software required by djschemadiff:
+
+ Python 2.3.
+
+ Some form of Django on sys.path. I am currently tracking SVN trunk, but
+ 0.95 should work too.
+
+ PostgreSQL (pgembed.py assumes you are using Debian 4.0--if your PostgreSQL
+ programs are not in /usr/lib/postgresql/8.1/bin then you will have to edit
+ this file.
+
+ PLY (Python Lex-Yacc) module from <http://www.dabeaz.com/ply/>
+
+ psycopg module
+
+ vim (optional; used if you specify --mode=vimdiff)
+
+Here is some example output of the default 'udiff' (unified diff) mode:
+
+ $ djschemadiff.py mysite/settings.py
+ ... lots of output from PostgreSQL elided ...
+ --- current-schema 
+ +++ new-schema 
+  CREATE INDEX articles_article_author_id ON articles_article USING btree (author_id);
+  CREATE INDEX articles_article_category_id ON articles_article USING btree (category_id);
+ -CREATE INDEX articles_category_slug ON articles_category USING btree (slug);
+ +CREATE INDEX articles_article_slug ON articles_article USING btree (slug);
+ +CREATE UNIQUE INDEX articles_category_slug ON articles_category USING btree (slug);
+  CREATE INDEX articles_comment_article_id ON articles_comment USING btree (article_id);
+  CREATE INDEX articles_comment_author_id ON articles_comment USING btree (author_id);
+  CREATE TABLE articles_category (
+         description text NOT NULL,
+         id serial NOT NULL,
+         name character varying (32) NOT NULL,
+ -       slug character varying (50) NOT NULL
+ +       slug character varying (50) NOT NULL,
+ +       summary text NOT NULL
+  );
+ -ALTER TABLE ONLY articles_article ADD CONSTRAINT articles_article_author_id_fkey FOREIGN KEY (author_id) REFERENCES auth_user(id);
+ -ALTER TABLE ONLY articles_article ADD CONSTRAINT articles_article_category_id_fkey FOREIGN KEY (category_id) REFERENCES articles_category(id);
+ +ALTER TABLE ONLY articles_article ADD CONSTRAINT articles_article_author_id_fkey FOREIGN KEY (author_id) REFERENCES auth_user(id) DEFERRABLE INITIALLY DEFERRED;
+ +ALTER TABLE ONLY articles_article ADD CONSTRAINT articles_article_category_id_fkey FOREIGN KEY (category_id) REFERENCES articles_category(id) DEFERRABLE INITIALLY DEFERRED;
+  ALTER TABLE ONLY articles_article ADD CONSTRAINT articles_article_pkey PRIMARY KEY (id);
+
+Run 'djschemadiff.py --help' for usage information.
+
+Currently djschemadiff is limited to only supporting PostgreSQL 8.1, but only
+because that is the only DBMS that I use. Extending djschemadiff to support other
+databases (including different versions of PostgreSQL) should be fairly easy.
+
+First, the sqlparse module would need to be altered so that it can understand
+the output of the new DBMS's dump tool. Then, the pgembed module would need to
+be altered (and probably renamed!) so that it can create/populate/dump/destroy
+an instance of the new database.
+
+The only other major limitation is that I had to re-implement Django's syncdb
+logic--poorly. The result is that populating the temporary 'fresh' database will
+sometimes fail if your INSTALLED_APPS are in the wrong order. If the script
+fails, try moving them about so that depended-upon tables are at the start of
+the sequence.
+
+If you happen to know how I can simply call django's own syncdb function, passing
+it my own connection, then tell me how so that this limitation can be eliminated!
+
+If you find this tool useful or have any other comments, ideas for improvements
+or even patches, please let me know: send email to Sam Morris <sam@robots.org.uk>.
