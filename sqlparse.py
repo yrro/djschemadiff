@@ -304,12 +304,12 @@ def p_field_type_word_sized (p):
 	p[0] = '%s (%i)' % (p[1], p[3])
 
 def p_opt_null (p):
-	'''opt_null : NULL'''
+	'''opt_null : NULL
+	            | '''
 	p[0] = True
 
 def p_opt_not_null (p):
-	'''opt_null : NOT NULL
-	            | '''
+	'''opt_null : NOT NULL'''
 	p[0] = False
 
 def p_alter_table_stmt (p):
