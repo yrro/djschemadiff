@@ -81,13 +81,13 @@ def kill_postmaster (pid):
 			return
 		raise e
 
-	sys.stderr.write ('... sending postmaster the termination signal\n')
+	sys.stderr.write ('... sending postmaster the Fast Shutdown signal\n')
 	# XXX: how do we know that pid is really our child?
 	#      catch SIGCHLD? <http://www.erlenstar.demon.co.uk/unix/faq_8.html#SEC83>
 	#      can also do away with the above check...
 	try:
 		import signal
-		os.kill (pid, signal.SIGTERM)
+		os.kill (pid, signal.SIGINT)
 	except OSError, (e, msg):
 		# the process might have died since the last check
 		if e != errno.ESRCH:
