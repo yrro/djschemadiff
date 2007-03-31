@@ -105,7 +105,7 @@ def pg_dump (host, user=_postgres_user, dbname='postgres', port='', password='')
 	'''Dumps the schema of a database'''
 	# TODO: specify password to pg_dump with PGPASSWORD
 	# environment var via subprocess module
-	p = os.popen ('pg_dump --no-owner --schema-only --no-privileges --host=%s --username=%s --port=%s %s' % (host, user, port, dbname), 'r')
+	p = os.popen ('pg_dump --no-owner --schema-only --no-privileges --schema=public --host=%s --username=%s --port=%s %s' % (host, user, port, dbname), 'r')
 	output = p.read ()
 	status = p.close ()
 	if status != None:
