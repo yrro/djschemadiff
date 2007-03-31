@@ -76,7 +76,6 @@ if __name__ == '__main__':
 
 			syncdb (db)
 			sql_clean = pgembed.pg_dump (host=db)
-			print sql_clean
 
 		except Exception, e:
 			print '-' * 80
