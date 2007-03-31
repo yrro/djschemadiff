@@ -91,8 +91,8 @@ if __name__ == '__main__':
 
 	# Get a copy of the current database
 	from django.conf import settings
-	if (settings.DATABASE_ENGINE != 'postgresql'):
-		sys.stderr.write ('This only works with PostgreSQL at the moment, sorry!\n')
+	if settings.DATABASE_ENGINE not in ('postgresql', 'postgresql_psycopg2'):
+		sys.stderr.write ('Database engine "%s" is not yet supported.\n' % settings.DATABASE_ENGINE)
 		sys.exit (1)
 	
 	sql_current = pgembed.pg_dump (user=settings.DATABASE_USER,

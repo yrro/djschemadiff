@@ -19,7 +19,7 @@ Software required by djschemadiff:
 
  PLY (Python Lex-Yacc) module from <http://www.dabeaz.com/ply/>
 
- psycopg module
+ psycopg2 module. The old psycopg module also works.
 
  vim (optional; used if you specify --mode=vimdiff)
 

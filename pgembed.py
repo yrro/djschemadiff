@@ -52,13 +52,16 @@ def connect (db):
 	'''Connects to the database at the specified directory.
 	The connection is tried five times, at one-second intervals
 	to allow for postmaster's initialisation process to complete.'''
+	try:
+		import psycopg2
+	except ImportError:
+		import psycopg as psycopg2
 	con = None
 	saved_e = None
-	import psycopg
 	for x in xrange (0, 5):
 		try:
-			con = psycopg.connect ('host=%s user=%s dbname=postgres' % (db, _postgres_user))
-		except psycopg.OperationalError, e:
+			con = psycopg2.connect ('host=%s user=%s dbname=postgres' % (db, _postgres_user))
+		except psycopg2.OperationalError, e:
 			saved_e = e
 		if con != None:
 			break
