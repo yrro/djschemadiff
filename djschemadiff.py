@@ -19,53 +19,21 @@
 import os, sys
 from sets import Set as set
 
-# It would be great if we could call django's own syncdb routine with our
-# own database connection, but I can't work out how. So instead I copied
-# the structure of the django.core.management.syncdb function.
-def syncdb (connection):
-	import django.core.management
-	from django.core.management import _get_sql_model_create, _get_sql_for_pending_references, _get_many_to_many_sql_for_model, get_sql_indexes_for_model
+def syncdb (db):
+	from django.conf import settings
+	(old_ENGINE, old_NAME, old_USER, old_PASSWORD, old_HOST, old_PORT) = (settings.DATABASE_ENGINE, settings.DATABASE_NAME, settings.DATABASE_USER, settings.DATABASE_PASSWORD, settings.DATABASE_HOST, settings.DATABASE_PORT)
 
-	django.core.management.disable_termcolors ()
-	cursor = connection.cursor ()
-
-	seen_models = set ()
-	pending_references = {}
-
-	for app in models.get_apps ():
-		app_name = app.__name__.split ('.')[-2]
-		model_list = models.get_models (app)
-
-		for model in model_list:
-			print '... processing %s.%s model' % (app_name, model._meta.object_name)
-			sql, references = _get_sql_model_create (model, seen_models)
-			seen_models.add (model)
-			for refto, refs in references.items ():
-				pending_references.setdefault (refto, []).extend (refs)
-			sql.extend (_get_sql_for_pending_references (model, pending_references))
-			print '... creating table %s' % model._meta.db_table
-			for statement in sql:
-				cursor.execute (statement)
-			
-		for model in model_list:
-			sql = _get_many_to_many_sql_for_model (model)
-			if sql:
-				print '... creating m2m tables for %s.%s model' % (app_name, model._meta.object_name)
-			for statement in sql:
-				cursor.execute (statement)
-
-		connection.commit ()
-		
-	for app in models.get_apps ():
-		app_name = app.__name__.split ('.')[-2]
-		for model in models.get_models (app):
-			index_sql = get_sql_indexes_for_model (model)
-			if index_sql:
-				print '... installing index for %s.%s model' % (app_name, model._meta.object_name)
-			for sql in index_sql:
-				cursor.execute (sql)
+	settings.DATABASE_ENGINE = 'postgresql'
+	settings.DATABASE_NAME = 'postgres'
+	settings.DATABASE_USER = pgembed._postgres_user
+	settings.DATABASE_PASSWORD = ''
+	settings.DATABASE_HOST = db
+	settings.DATABASE_PORT = '5432'
 	
-	connection.commit ()
+	import django.core.management
+	django.core.management.syncdb (verbosity = 1, interactive = False)
+
+	(settings.DATABASE_ENGINE, settings.DATABASE_NAME, settings.DATABASE_USER, settings.DATABASE_PASSWORD, settings.DATABASE_HOST, settings.DATABASE_PORT) = (old_ENGINE, old_NAME, old_USER, old_PASSWORD, old_HOST, old_PORT)
 
 if __name__ == '__main__':
 	# Parse command line arguments
@@ -94,34 +62,47 @@ if __name__ == '__main__':
 		sys.stderr.write ('%s\n' % (e))
 		sys.exit (1)
 
+	# Get a copy of a clean database
+	sql_clean = None
+
 	import pgembed
 	db = pgembed.initdb ()
-
+	pid = pgembed.spawn_postmaster (db)
 	try:
-		pid = pgembed.spawn_postmaster (db)
-		con = pgembed.connect (db)
+		try:
+			# wait for the database to come up
+			con = pgembed.connect (db)
+			con.close ()
 
-		syncdb (con)
-		sql_clean = pgembed.pg_dump (host=db)
+			syncdb (db)
+			sql_clean = pgembed.pg_dump (host=db)
+			print sql_clean
 
-		con.close ()
+		except Exception, e:
+			print '-' * 80
+			import traceback
+			traceback.print_exc ()
+	finally:
 		pgembed.kill_postmaster (pid)
-	except Exception, e:
-		print '-' * 80
-		import traceback
-		traceback.print_exc ()
 		pgembed.rmdb (db)
+	
+	if sql_clean == None:
+		sys.stderr.write ('Unable to create a fresh copy of the database.\n')
+		sys.exit (1)
+
+	# Get a copy of the current database
+	from django.conf import settings
+	if (settings.DATABASE_ENGINE != 'postgresql'):
+		sys.stderr.write ('This only works with PostgreSQL at the moment, sorry!\n')
 		sys.exit (1)
 	
-	pgembed.rmdb (db)
-
-	from django.conf import settings
 	sql_current = pgembed.pg_dump (user=settings.DATABASE_USER,
 		dbname=settings.DATABASE_NAME,
 		host=settings.DATABASE_HOST,
 		port=settings.DATABASE_PORT,
 		password=settings.DATABASE_PASSWORD)
 
+	# Compare the two schemas
 	import sqlparse
 	sql_current = sqlparse.parse (sql_current)
 	sql_clean = sqlparse.parse (sql_clean)

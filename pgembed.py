@@ -34,7 +34,9 @@ def initdb ():
 		raise Exception ('initdb failed (%i)' % (status))
 	
 	cfg = open (os.path.join (dir, 'postgresql.conf'), 'a')
-	cfg.write ("listen_addresses = ''") # disable TCP, avoid port conflicts
+	cfg.write ("listen_addresses = ''\n") # disable TCP, avoid port conflicts
+	cfg.write ("log_min_error_statement = error\n") # log SQL statements that cause errors
+	#cfg.write ("log_min_duration_statement = 0\n") # log all SQL statements
 	cfg.close ()
 	return dir
 
@@ -43,9 +45,6 @@ def spawn_postmaster (db):
 	Returns the pid of the process.'''
 	postmaster_path = os.path.join (_postgres_bin, 'postmaster')
 	pid = os.spawnl (os.P_NOWAIT, postmaster_path, postmaster_path, '-k', db, '-D', db, '-F')
-	
-	import atexit
-	atexit.register (kill_postmaster, pid)
 	
 	return pid
 
