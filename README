@@ -10,12 +10,12 @@ Software required by djschemadiff:
 
  Python 2.3.
 
- Some form of Django on sys.path. I am currently tracking SVN trunk, but
- 0.95 should work too.
+ Some form of Django installed on your on sys.path. I am currently tracking
+ SVN trunk, but 0.95 should work too.
 
- PostgreSQL (pgembed.py assumes you are using Debian 4.0--if your PostgreSQL
- programs are not in /usr/lib/postgresql/8.1/bin then you will have to edit
- this file.
+ PostgreSQL. pgembed.py assumes you are using Debian 4.0 and PostgreSQL 8.1.
+ If your PostgreSQL programs are not in /usr/lib/postgresql/8.1/bin then you
+ will have to edit this file.
 
  PLY (Python Lex-Yacc) module from <http://www.dabeaz.com/ply/>
 
@@ -60,15 +60,6 @@ First, the sqlparse module would need to be altered so that it can understand
 the output of the new DBMS's dump tool. Then, the pgembed module would need to
 be altered (and probably renamed!) so that it can create/populate/dump/destroy
 an instance of the new database.
-
-The only other major limitation is that I had to re-implement Django's syncdb
-logic--poorly. The result is that populating the temporary 'fresh' database will
-sometimes fail if your INSTALLED_APPS are in the wrong order. If the script
-fails, try moving them about so that depended-upon tables are at the start of
-the sequence.
-
-If you happen to know how I can simply call django's own syncdb function, passing
-it my own connection, then tell me how so that this limitation can be eliminated!
 
 If you find this tool useful or have any other comments, ideas for improvements
 or even patches, please let me know: send email to Sam Morris <sam@robots.org.uk>.
