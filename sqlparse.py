@@ -187,7 +187,7 @@ def t_NUMBER (t):
 
 # identifiers
 def t_ID (t):
-	'[a-zA-Z][a-zA-Z0-9_]*'
+	'[a-zA-Z][a-zA-Z0-9_.]*'
 	if t.value in keywords:
 		t.type = t.value
 	else:
