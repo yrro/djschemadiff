@@ -151,7 +151,7 @@ class SqlComment (object):
 		return "COMMENT ON SCHEMA %s IS '%s'" % (self.schema, self.comment)
 
 	def __cmp__ (self, other):
-		return self.schema, other.schema
+		return cmp (self.schema, other.schema)
 
 class SqlFunction (object):
 	def __init__ (self, name, returns, body, lang):
