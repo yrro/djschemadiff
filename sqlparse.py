@@ -153,12 +153,37 @@ class SqlComment (object):
 	def __cmp__ (self, other):
 		return self.schema, other.schema
 
+class SqlFunction (object):
+	def __init__ (self, name, returns, body, lang):
+		self.name = name
+		self.returns = returns
+		self.body = body
+		self.lang = lang
+	
+	def __str__ (self):
+		return 'CREATE FUNCTION %s() RETURNS %s AS $$%s$$ LANGUAGE %s' % (self.name, self.returns, self.body, self.lang)
+
+	def __cmp__ (self, other):
+		return cmp (self.name, other.name)
+
+class SqlTrigger (object):
+	def __init__ (self, name, table, proc):
+		self.name = name
+		self.table = table
+		self.proc = proc
+	
+	def __str__ (self):
+		return 'CREATE TRIGGER %s BEFORE INSERT ON %s FOR EACH ROW EXECUTE PROCEDURE %s()' % (self.name, self.table, self.proc)
+
+	def __cmp__ (self, other):
+		return cmp (self.name, other.name)
+
 # lexer rules
 #
 
-keywords = ['SET', 'COMMENT', 'CREATE', 'TABLE', 'NOT', 'NULL', 'ON', 'SCHEMA', 'IS', 'ALTER', 'ONLY', 'ADD', 'CONSTRAINT', 'UNIQUE', 'PRIMARY', 'KEY', 'CHECK', 'DEFERRABLE', 'DEFERRED', 'FOREIGN', 'INDEX', 'INITIALLY', 'REFERENCES', 'USING', 'BEGIN', 'COMMIT']
+keywords = ['SET', 'COMMENT', 'CREATE', 'TABLE', 'NOT', 'NULL', 'ON', 'SCHEMA', 'IS', 'ALTER', 'ONLY', 'ADD', 'CONSTRAINT', 'UNIQUE', 'PRIMARY', 'KEY', 'CHECK', 'DEFERRABLE', 'DEFERRED', 'FOREIGN', 'INDEX', 'INITIALLY', 'REFERENCES', 'USING', 'FUNCTION', 'RETURNS', 'AS', 'LANGUAGE', 'TRIGGER', 'BEFORE', 'INSERT', 'FOR', 'EACH', 'ROW', 'EXECUTE', 'PROCEDURE']
 
-tokens = keywords + ['sqlcomment', 'NEWLINE', 'ID', 'QID', 'NUMBER', 'GEQ', 'STRING']
+tokens = keywords + ['sqlcomment', 'NEWLINE', 'ID', 'QID', 'NUMBER', 'GEQ', 'STRING', 'LONGSTRING']
 literals = ';(),='
 
 def t_NEWLINE (t):
@@ -178,6 +203,11 @@ t_GEQ = '>='
 def t_STRING (t):
 	"'.*?'"
 	t.value = t.value[1:-1]
+	return t
+
+def t_LONGSTRING (t):
+	r'\$\$(.|\n)*?\$\$'
+	t.value = t.value[2:-2]
 	return t
 
 def t_NUMBER (t):
@@ -221,6 +251,8 @@ def p_statement (p):
 	             | create_table_stmt ';'
 	             | alter_table_stmt ';'
 	             | create_index_stmt ';'
+				 | create_function_stmt ';'
+				 | create_trigger_stmt ';'
 	'''
 	p[0] = p[1]
 
@@ -278,6 +310,10 @@ def p_expression_atom (p):
 	'''expression : NUMBER
 	              | ID'''
 	p[0] = p[1]
+
+def p_expression_multi (p):
+	'expression : expression ID'
+	p[0] = '%s %s' % (p[1], p[2])
 
 def p_operator (p):
 	'''operator : GEQ'''
@@ -386,6 +422,14 @@ def p_opt_unique_empty (p):
 def p_index_method (p):
 	'index_method : ID'
 	p[0] = p[1]
+
+def p_create_function_stmt (p):
+	'''create_function_stmt : CREATE FUNCTION ID '(' ')' RETURNS ID AS LONGSTRING LANGUAGE ID'''
+	p[0] = SqlFunction (name=p[3], returns=p[7], body=p[9], lang=p[11])
+
+def p_create_trigger_stmt (p):
+	'''create_trigger_stmt : CREATE TRIGGER ID BEFORE INSERT ON ID FOR EACH ROW EXECUTE PROCEDURE ID '(' ')' '''
+	p[0] = SqlTrigger (name=p[3], table=p[7], proc=p[13])
 
 from ply import lex, yacc
 lex.lex ()
