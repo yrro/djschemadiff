@@ -11,7 +11,7 @@ Software required by djschemadiff:
  Python 2.3.
 
  Some form of Django installed on your on sys.path. I am currently tracking
- SVN trunk, but 0.95 should work too.
+ SVN trunk, but 0.95 and later releases should work too.
 
  PostgreSQL. pgembed.py assumes you are using Debian 4.0 and PostgreSQL 8.1.
  If your PostgreSQL programs are not in /usr/lib/postgresql/8.1/bin then you
