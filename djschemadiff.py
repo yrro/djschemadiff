@@ -17,7 +17,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 import os, sys
-from sets import Set as set
+from sets import Set as set # python 2.3 compat
 
 def syncdb (db):
 	from django.conf import settings
