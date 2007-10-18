@@ -32,9 +32,14 @@ def syncdb (db):
 	
 	import django.core.management
 	try:
-		django.core.management.syncdb (verbosity = 1, interactive = False)
-	except TypeError:
-		django.core.management.syncdb ()
+		django.core.management.call_command ('syncdb', verbosity = 1, interactive = False)
+	except AttributeError:
+		# django 0.96 fallback
+		try:
+			django.core.management.syncdb (verbosity = 1, interactive = False)
+		except TypeError:
+			# django 0.95 fallback
+			django.core.management.syncdb ()
 
 	(settings.DATABASE_ENGINE, settings.DATABASE_NAME, settings.DATABASE_USER, settings.DATABASE_PASSWORD, settings.DATABASE_HOST, settings.DATABASE_PORT) = (old_ENGINE, old_NAME, old_USER, old_PASSWORD, old_HOST, old_PORT)
 
