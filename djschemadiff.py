@@ -50,6 +50,9 @@ if __name__ == '__main__':
 	op.add_option ('--mode', '-m',
 		dest='mode', choices=['udiff', 'vimdiff'], default='udiff',
 		help='udiff (default) or vimdiff')
+	op.add_option ('--template', '-t',
+		dest='template',
+		help='file containing SQL statements to process before running syncdb')
 		
 	(options, args) = op.parse_args()
 	if len (args) != 1:
@@ -83,6 +86,9 @@ if __name__ == '__main__':
 			# wait for the database to come up
 			con = pgembed.connect (db)
 			con.close ()
+
+			if options.template:
+				pgembed.process_sql (db, options.template)
 
 			syncdb (db)
 			sql_clean = pgembed.pg_dump (host=db)

@@ -17,6 +17,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 import os, os.path
+import subprocess
 import sys
 
 _postgres_bin = '/usr/lib/postgresql/8.2/bin'
@@ -114,3 +115,12 @@ def pg_dump (host, user=_postgres_user, dbname='postgres', port='', password='')
 	if status != None:
 		raise Exception ('pg_dump failed (%i)' % status)
 	return output
+
+def process_sql (host, file):
+	status = subprocess.call (['psql',
+		'-h', host,
+		'-U', _postgres_user,
+		'-f', file,
+		'postgres'])
+	if status != 0:
+		raise Exception ('psql failed (%i)' % (s))
