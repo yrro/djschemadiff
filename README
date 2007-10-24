@@ -26,8 +26,8 @@ Requirements
 
  * http://www.postgresql.org/[PostgreSQL]. `pgembed.py` currently assumes you
    are using http://www.debian.org/releases/4.0/[Debian 4.0 (``etch'')] and
-   PostgreSQL 8.1. If your PostgreSQL executables are not in
-   `/usr/lib/postgresql/8.1/bin` then you will have to edit this file.
+   PostgreSQL 8.2. If your PostgreSQL executables are not in
+   `/usr/lib/postgresql/8.2/bin` then you will have to edit this file.
 
  * http://www.dabeaz.com/ply/[PLY] (Python Lex-Yacc) module.
 
