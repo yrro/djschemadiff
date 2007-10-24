@@ -124,3 +124,5 @@ def process_sql (host, file):
 		'postgres'])
 	if status != 0:
 		raise Exception ('psql failed (%i)' % (s))
+
+# vim: noet sts=0

@@ -148,3 +148,5 @@ if __name__ == '__main__':
 		f1.flush ()
 		f2.flush ()
 		os.spawnlp (os.P_WAIT, 'vimdiff', 'vimdiff', '-m', f1.name, f2.name)
+
+# vim: noet sts=0
