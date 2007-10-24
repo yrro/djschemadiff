@@ -21,15 +21,18 @@ from sets import Set as set # python 2.3 compat
 
 def syncdb (db):
 	from django.conf import settings
-	(old_ENGINE, old_NAME, old_USER, old_PASSWORD, old_HOST, old_PORT) = (settings.DATABASE_ENGINE, settings.DATABASE_NAME, settings.DATABASE_USER, settings.DATABASE_PASSWORD, settings.DATABASE_HOST, settings.DATABASE_PORT)
+	new_settings = {'DATABASE_ENGINE': 'postgresql_psycopg2',
+		'DATABASE_NAME': 'postgres',
+		'DATABASE_USER': pgembed._postgres_user,
+		'DATABASE_PASSWORD': '',
+		'DATABASE_HOST': db,
+		'DATABASE_PORT': 5432}
 
-	settings.DATABASE_ENGINE = 'postgresql'
-	settings.DATABASE_NAME = 'postgres'
-	settings.DATABASE_USER = pgembed._postgres_user
-	settings.DATABASE_PASSWORD = ''
-	settings.DATABASE_HOST = db
-	settings.DATABASE_PORT = '5432'
-	
+	old_settings = {}
+	for x in new_settings:
+		old_settings[x] = getattr (settings, x)
+		setattr (settings, x, new_settings[x])
+
 	import django.core.management
 	try:
 		django.core.management.call_command ('syncdb', verbosity = 1, interactive = False)
@@ -41,7 +44,8 @@ def syncdb (db):
 			# django 0.95 fallback
 			django.core.management.syncdb ()
 
-	(settings.DATABASE_ENGINE, settings.DATABASE_NAME, settings.DATABASE_USER, settings.DATABASE_PASSWORD, settings.DATABASE_HOST, settings.DATABASE_PORT) = (old_ENGINE, old_NAME, old_USER, old_PASSWORD, old_HOST, old_PORT)
+	for x in old_settings:
+		setattr (settings, x, old_settings[x])
 
 if __name__ == '__main__':
 	# Parse command line arguments
