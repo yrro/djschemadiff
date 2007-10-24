@@ -56,6 +56,8 @@ if __name__ == '__main__':
 		op.error ('Specify the path to a single Django settings file')
 
 	import os.path
+	if not os.path.exists (args[0]):
+		op.error ('The settings file you specified does not exist.')
 	(settingspath, settingsmodule) = os.path.split (args[0])
 	settingsmodule = os.path.splitext (settingsmodule)[0]
 
