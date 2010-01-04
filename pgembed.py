@@ -101,7 +101,9 @@ def kill_postmaster (pid):
 	sys.stderr.write ('... it is done, yuri!\n')
 
 def rmdb (db):
-	'''Deletes the database at the specified directory'''
+	'''Deletes the database at the specified directory
+	
+	TODO: ensure that it's really a db cluster first! PG_VERSION might do it'''
 	import shutil
 	shutil.rmtree (db)
 
