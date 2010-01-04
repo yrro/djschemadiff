@@ -29,9 +29,9 @@ def syncdb (db):
 		'DATABASE_PORT': 5432}
 
 	old_settings = {}
-	for x in new_settings:
-		old_settings[x] = getattr (settings, x)
-		setattr (settings, x, new_settings[x])
+	for name, value in new_settings.items ():
+		old_settings[name] = getattr (settings, name)
+		setattr (settings, name, value)
 
 	import django.core.management
 	try:
@@ -44,8 +44,8 @@ def syncdb (db):
 			# django 0.95 fallback
 			django.core.management.syncdb ()
 
-	for x in old_settings:
-		setattr (settings, x, old_settings[x])
+	for name, value in old_settings.items ():
+		setattr (settings, name, value)
 
 if __name__ == '__main__':
 	# Parse command line arguments
