@@ -20,7 +20,7 @@ import os, os.path
 import subprocess
 import sys
 
-_postgres_bin = '/usr/lib/postgresql/8.2/bin'
+_postgres_bin = '/usr/lib/postgresql/8.4/bin'
 _postgres_user = 'pgembed'
 
 def initdb ():
