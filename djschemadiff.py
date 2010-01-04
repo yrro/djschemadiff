@@ -122,23 +122,11 @@ if __name__ == '__main__':
 		password=settings.DATABASE_PASSWORD)
 
 	# Compare the two schemas
-	import sqlparse
-	sql_current = sqlparse.parse (sql_current)
-	sql_clean = sqlparse.parse (sql_clean)
-
-	def bytype (o1, o2):
-		'Sort objects by their type; then by their value.'
-		r = cmp (type (o1), type (o2))
-		if r != 0:
-			return r
-		return cmp (o1, o2)
-	sql_current.sort (bytype)
-	sql_clean.sort (bytype)
 
 	if options.mode == 'udiff':
 		import difflib
-		g = difflib.unified_diff ('\n'.join ([str (s) + ';' for s in sql_current]).split ('\n'),
-			'\n'.join ([str (s) + ';' for s in sql_clean]).split ('\n'),
+		g = difflib.unified_diff (sql_current.split ('\n'),
+			sql_clean.split ('\n'),
 			fromfile='current-schema', tofile='new-schema',
 			n=10, lineterm='')
 		print '\n'.join (g)
@@ -147,8 +135,8 @@ if __name__ == '__main__':
 		import tempfile
 		f1 = tempfile.NamedTemporaryFile ()
 		f2 = tempfile.NamedTemporaryFile ()
-		f1.write ('\n'.join ([str (s) + ';' for s in sql_current]))
-		f2.write ('\n'.join ([str (s) + ';' for s in sql_clean]))
+		f1.write (sql_current)
+		f2.write (sql_clean)
 		f1.flush ()
 		f2.flush ()
 		os.spawnlp (os.P_WAIT, 'vimdiff', 'vimdiff', '-m', f1.name, f2.name)
