@@ -36,16 +36,8 @@ def syncdb (db):
 		setattr (settings, name, value)
 
 	import django.core.management
-	try:
-		django.core.management.call_command ('syncdb', verbosity = 1, interactive = False)
-	except AttributeError:
-		# django 0.96 fallback
-		try:
-			django.core.management.syncdb (verbosity = 1, interactive = False)
-		except TypeError:
-			# django 0.95 fallback
-			django.core.management.syncdb ()
-
+	django.core.management.call_command ('syncdb', verbosity = 1, interactive = False)
+	
 	for name, value in old_settings.items ():
 		setattr (settings, name, value)
 
@@ -71,14 +63,8 @@ if __name__ == '__main__':
 	settingsmodule = os.path.splitext (settingsmodule)[0]
 
 	# Prepare django environment
-	try:
-		sys.path.insert (0, settingspath)
-		# without including the parent directory, the imports silently fail
-		sys.path.insert (0, settingspath + '/../')
-		os.environ['DJANGO_SETTINGS_MODULE'] = settingsmodule
-	except EnvironmentError, e:
-		sys.stderr.write ('%s\n' % (e))
-		sys.exit (1)
+	sys.path.insert (0, settingspath)
+	os.environ['DJANGO_SETTINGS_MODULE'] = settingsmodule
 
 	# Get a copy of the current database
 	from django.conf import settings
