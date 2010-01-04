@@ -19,6 +19,8 @@
 import os, sys
 from sets import Set as set # python 2.3 compat
 
+import pgembed
+
 def syncdb (db):
 	from django.conf import settings
 	new_settings = {'DATABASE_ENGINE': 'postgresql_psycopg2',
@@ -82,7 +84,6 @@ if __name__ == '__main__':
 	# Get a copy of a clean database
 	sql_clean = None
 
-	import pgembed
 	db = pgembed.initdb ()
 	pid = pgembed.spawn_postmaster (db)
 	try:
