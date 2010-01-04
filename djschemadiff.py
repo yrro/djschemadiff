@@ -70,16 +70,27 @@ if __name__ == '__main__':
 	(settingspath, settingsmodule) = os.path.split (args[0])
 	settingsmodule = os.path.splitext (settingsmodule)[0]
 
-	# Init django database
+	# Prepare django environment
 	try:
 		sys.path.insert (0, settingspath)
 		# without including the parent directory, the imports silently fail
 		sys.path.insert (0, settingspath + '/../')
 		os.environ['DJANGO_SETTINGS_MODULE'] = settingsmodule
-		from django.db import models
 	except EnvironmentError, e:
 		sys.stderr.write ('%s\n' % (e))
 		sys.exit (1)
+
+	# Get a copy of the current database
+	from django.conf import settings
+	if settings.DATABASE_ENGINE not in ('postgresql', 'postgresql_psycopg2'):
+		sys.stderr.write ('Database engine "%s" is not yet supported.\n' % settings.DATABASE_ENGINE)
+		sys.exit (1)
+	
+	sql_current = pgembed.pg_dump (user=settings.DATABASE_USER,
+		dbname=settings.DATABASE_NAME,
+		host=settings.DATABASE_HOST,
+		port=settings.DATABASE_PORT,
+		password=settings.DATABASE_PASSWORD)
 
 	# Get a copy of a clean database
 	sql_clean = None
@@ -109,18 +120,6 @@ if __name__ == '__main__':
 	if sql_clean == None:
 		sys.stderr.write ('Unable to create a fresh copy of the database.\n')
 		sys.exit (1)
-
-	# Get a copy of the current database
-	from django.conf import settings
-	if settings.DATABASE_ENGINE not in ('postgresql', 'postgresql_psycopg2'):
-		sys.stderr.write ('Database engine "%s" is not yet supported.\n' % settings.DATABASE_ENGINE)
-		sys.exit (1)
-	
-	sql_current = pgembed.pg_dump (user=settings.DATABASE_USER,
-		dbname=settings.DATABASE_NAME,
-		host=settings.DATABASE_HOST,
-		port=settings.DATABASE_PORT,
-		password=settings.DATABASE_PASSWORD)
 
 	# Compare the two schemas
 
