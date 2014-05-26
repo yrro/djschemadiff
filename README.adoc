@@ -79,12 +79,6 @@ If you find this tool useful or have any other comments, ideas for improvements
 or even patches, please let me know: send email to mailto:sam@robots.org.uk[Sam
 Morris].
 
-I use the http://git.or.cz/[Git] version control system to manage the source
-code of 'djschemadiff'. You can fetch a copy of the repository with the
-following command:
-
- git clone https://robots.org.uk/src/djschemadiff/djschemadiff.git
-
 Copyright, License and Warranty
 -------------------------------
 (C) Sam Morris <sam@robots.org.uk>
